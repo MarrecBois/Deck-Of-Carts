@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Cart of All Carts",
+  "version": "1.0",
+  "description": "Summarize shopping carts across open tabs.",
+  "permissions": ["tabs", "scripting", "storage"],
+  "host_permissions": [
+    "*://*.amazon.com/*",
+    "*://*.ebay.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "assets/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.amazon.com/*"],
+      "js": ["content-scripts/amazon.js"]
+    },
+    {
+      "matches": ["*://*.ebay.com/*"],
+      "js": ["content-scripts/ebay.js"]
+    }
+  ]
+}
