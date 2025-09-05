@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deck of Carts • Product Compare</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --muted: #8aa0b2;
+      --text: #e8eef4;
+      --accent: #6aa6ff;
+      --ring: rgba(106, 166, 255, 0.45);
+      --shadow: 0 10px 30px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.25);
+      --radius: 18px;
+      --surface: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.18));
+      --border: rgba(255,255,255,.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: radial-gradient(1200px 800px at 70% -10%, #122033 0%, var(--bg) 40%); color: var(--text); letter-spacing: 0.2px; }
+    .shell { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+    /* Header */
+    .header { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(8px); background: linear-gradient(180deg, rgba(11,15,20,.9), rgba(11,15,20,.6)); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .header-inner { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+    .logo { width: 36px; height: 36px; border-radius: 10px; background: radial-gradient(120px 80px at 30% 20%, #6aa6ff 0%, #7ef0ff 50%, #1f65ff 100%); box-shadow: 0 8px 24px rgba(106,166,255,.45); }
+
+    .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .inp, .sel, .btn { appearance: none; border: 1px solid var(--border); outline: none; color: var(--text); background: var(--surface); padding: 10px 12px; border-radius: 12px; transition: 120ms ease; }
+    .inp:focus, .sel:focus { box-shadow: 0 0 0 4px var(--ring); border-color: rgba(255,255,255,.18); }
+    .btn { cursor: pointer; font-weight: 600; }
+    .btn.primary { background: linear-gradient(180deg, #2a7bff, #1d5ee6); border-color: transparent; }
+
+    .count { color: var(--muted); font-size: 14px; }
+
+    /* View switcher */
+    .views { display: inline-flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.03); }
+    .views button { border: 0; background: transparent; color: var(--text); padding: 8px 12px; cursor: pointer; font-weight: 600; }
+    .views button.active { background: rgba(255,255,255,.10); }
+
+    /* Card/Grid view */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-top: 18px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease; display: flex; flex-direction: column; height: 100%; }
+    .card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.16); box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 4px 14px rgba(0,0,0,.35); }
+    .imgbox { width: 100%; aspect-ratio: 1/1; background: #0a0e13; overflow: hidden; }
+    .imgbox img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+    .title { margin: 0; font-size: 18px; line-height: 1.3; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0 0; }
+    .rating { display: inline-flex; align-items: center; gap: 6px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .desc { color: #cfe1ef; margin: 12px 0 0; font-size: 14px; line-height: 1.6; flex: 1; }
+    .chip { font-size: 12px; border: 1px solid rgba(255,255,255,.10); color: var(--muted); padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.03); }
+    .footer { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+    .link { text-decoration: none; color: var(--text); font-weight: 600; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); }
+    .link:hover { border-color: rgba(255,255,255,.2); }
+
+    /* List view */
+    .list { display: grid; gap: 12px; margin-top: 18px; }
+    .row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 12px; display: grid; grid-template-columns: 120px 1fr auto; gap: 14px; align-items: center; }
+    .row .thumb { width: 120px; height: 120px; border-radius: 10px; overflow: hidden; background: #0a0e13; }
+    .row .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .row .info { display: grid; gap: 6px; }
+    .row .actions { display: flex; gap: 8px; }
+
+    @media (max-width: 720px) {
+      .row { grid-template-columns: 90px 1fr; }
+      .row .actions { grid-column: 1 / -1; }
+      .row .thumb { width: 90px; height: 90px; }
+    }
+
+    /* Table view */
+    .table-wrap { margin-top: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: auto; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    thead th { position: sticky; top: 0; background: rgba(20,28,38,.9); backdrop-filter: blur(6px); }
+    th, td { border-bottom: 1px solid rgba(255,255,255,.06); padding: 12px; text-align: left; vertical-align: top; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    .t-title { display: flex; gap: 10px; align-items: center; }
+    .t-title img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+
+    /* Compare tray */
+    .tray { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 30; display: none; }
+    .tray-inner { background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.24)); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 10px; box-shadow: var(--shadow); display: flex; gap: 10px; align-items: center; }
+    .pill { padding: 6px 10px; font-size: 13px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="shell header-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div>Deck of Carts</div>
+          <div class="muted" style="font-size:12px">A GaMaZa Production</div>
+        </div>
+      </div>
+      <div class="controls">
+        <input class="inp" id="search" placeholder="Search products" />
+        <select class="sel" id="sort">
+          <option value="relevance">Sort by relevance</option>
+          <option value="rating">Sort by rating</option>
+          <option value="reviews">Sort by review count</option>
+          <option value="title">Sort by title</option>
+        </select>
+        <div class="views" role="tablist" aria-label="View switcher">
+          <button type="button" id="view-cards" class="active" data-view="cards" role="tab" aria-selected="true" aria-controls="cardsView">Cards</button>
+          <button type="button" id="view-list" data-view="list" role="tab" aria-selected="false" aria-controls="listView">List</button>
+          <button type="button" id="view-table" data-view="table" role="tab" aria-selected="false" aria-controls="tableView">Table</button>
+        </div>
+      </div>
+      <div class="count" id="count">0 items</div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div id="cardsView" class="grid"></div>
+    <div id="listView" class="list" hidden></div>
+    <div id="tableView" class="table-wrap" hidden></div>
+  </main>
+
+  <div class="tray" id="tray">
+    <div class="tray-inner">
+      <strong style="margin-right:6px">Compare:</strong>
+      <div id="comparePills" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <button class="btn primary" style="margin-left:auto" type="button">Open compare view</button>
+    </div>
+  </div>
+
+  <script>
+    const PRODUCTS = [
+      { id: "p1", title: "Noise-Canceling Headphones Pro X", image: "https://picsum.photos/seed/headphones/600/600", rating: 4.7, reviews: 2813, description: "Over-ear ANC with 40h battery, low-latency mode and fold-flat design; USB-C fast charge, plush memory-foam cushions." },
+      { id: "p2", title: "UltraSharp 27\" 4K Monitor", image: "https://picsum.photos/seed/monitor/600/600", rating: 4.6, reviews: 1241, description: "IPS 4K panel with 99% sRGB, factory calibration, height and tilt adjustable stand, dual USB-C with 90W power." },
+      { id: "p3", title: "Mechanical Keyboard 75% Wireless", image: "https://picsum.photos/seed/keyboard/600/600", rating: 4.4, reviews: 879, description: "Hot-swappable switches, tri-mode connectivity, PBT keycaps, per-key RGB and gasket mount for softer typing feel." },
+      { id: "p4", title: "Smartwatch Series S", image: "https://picsum.photos/seed/watch/600/600", rating: 4.2, reviews: 3120, description: "AMOLED display, GPS and NFC, 5-day battery, sleep and HRV tracking with guided workouts and safety alerts." },
+      { id: "p5", title: "Portable SSD 2TB USB-C", image: "https://picsum.photos/seed/ssd/600/600", rating: 4.8, reviews: 5629, description: "NVMe speeds up to 1,050 MB/s, shock resistant shell, hardware encryption and USB 3.2 Gen 2 interface." },
+      { id: "p6", title: "True Wireless Earbuds Plus", image: "https://picsum.photos/seed/earbuds/600/600", rating: 4.1, reviews: 992, description: "Hybrid ANC with ambient pass-through, Qi charging case, IPX4 splash rating and multi-point pairing." }
+    ];
+
+    const els = {
+      cardsView: document.getElementById('cardsView'),
+      listView: document.getElementById('listView'),
+      tableView: document.getElementById('tableView'),
+      count: document.getElementById('count'),
+      search: document.getElementById('search'),
+      sort: document.getElementById('sort'),
+      tray: document.getElementById('tray'),
+      pills: document.getElementById('comparePills'),
+      viewButtons: Array.from(document.querySelectorAll('.views button'))
+    };
+
+    const state = { q: '', sort: 'relevance', selected: new Set(), view: 'cards' };
+
+    function sortData(data) {
+      switch (state.sort) {
+        case 'rating': return data.sort((a,b) => b.rating - a.rating);
+        case 'reviews': return data.sort((a,b) => b.reviews - a.reviews);
+        case 'title': return data.sort((a,b) => a.title.localeCompare(b.title));
+        default: return data;
+      }
+    }
+
+    function filterData() {
+      return PRODUCTS.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(state.q));
+    }
+
+    function render() {
+      const data = sortData(filterData());
+      els.count.textContent = `${data.length} item${data.length !== 1 ? 's' : ''}`;
+
+      // toggle views
+      els.cardsView.hidden = state.view !== 'cards';
+      els.listView.hidden = state.view !== 'list';
+      els.tableView.hidden = state.view !== 'table';
+
+      // render view
+      if (state.view === 'cards') renderCards(data);
+      if (state.view === 'list') renderList(data);
+      if (state.view === 'table') renderTable(data);
+
+      bindCompareCheckboxes();
+    }
+
+    function cardHTML(p) {
+      const checked = state.selected.has(p.id) ? 'checked' : '';
+      return `
+        <article class="card">
+          <div class="imgbox"><img src="${p.image}" alt="${p.title}" /></div>
+          <div class="card-content">
+            <h3 class="title">${p.title}</h3>
+            <div class="meta">
+              <span class="rating">${'★'.repeat(Math.round(p.rating))}${'☆'.repeat(5 - Math.round(p.rating))}
+                <span class="muted">${p.rating.toFixed(1)} • ${p.reviews.toLocaleString()} reviews</span>
+              </span>
+              <label class="chip"><input type="checkbox" class="cmp" data-id="${p.id}" ${checked}/> Compare</label>
+            </div>
+            <p class="desc">${p.description}</p>
+            <div class="footer">
+              <a class="link" href="#">Open source tab</a>
+              <a class="link" href="#">View price history</a>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function listRowHTML(p) {
+      const checked = state.selected.has(p.id) ? 'checked' : '';
+      return `
+        <div class="row">
+          <div class="thumb"><img src="${p.image}" alt="${p.title}"></div>
+          <div class="info">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap">
+              <h3 class="title" style="margin:0">${p.title}</h3>
+              <label class="chip"><input type="checkbox" class="cmp" data-id="${p.id}" ${checked}/> Compare</label>
+            </div>
+            <div class="muted">${'★'.repeat(Math.round(p.rating))}${'☆'.repeat(5 - Math.round(p.rating))} • ${p.rating.toFixed(1)} • ${p.reviews.toLocaleString()} reviews</div>
+            <div class="muted" style="max-width:85ch">${p.description}</div>
+          </div>
+          <div class="actions">
+            <a class="link" href="#">Open tab</a>
+            <a class="link" href="#">Track</a>
+          </div>
+        </div>`;
+    }
+
+    function renderCards(data){ els.cardsView.innerHTML = data.map(cardHTML).join(''); }
+    function renderList(data){ els.listView.innerHTML = data.map(listRowHTML).join(''); }
+
+    function renderTable(data){
+      const header = `<thead><tr><th>Attribute</th>${data.map(p => `<th><div class="t-title"><img src="${p.image}" alt=""><div>${p.title}</div></div></th>`).join('')}</tr></thead>`;
+      const rows = [
+        { key: 'Rating', val: p => `${'★'.repeat(Math.round(p.rating))}${'☆'.repeat(5 - Math.round(p.rating))} (${p.rating.toFixed(1)})` },
+        { key: 'Reviews', val: p => p.reviews.toLocaleString() },
+        { key: 'Description', val: p => p.description }
+      ].map(r => `<tr><td><strong>${r.key}</strong></td>${data.map(p => `<td>${r.val(p)}</td>`).join('')}</tr>`).join('');
+
+      const compareRow = `<tr><td><strong>Compare</strong></td>${data.map(p => `<td><label class="chip"><input type="checkbox" class="cmp" data-id="${p.id}" ${state.selected.has(p.id) ? 'checked' : ''}/> Select</label></td>`).join('')}</tr>`;
+
+      els.tableView.innerHTML = `<table>${header}<tbody>${rows}${compareRow}</tbody></table>`;
+    }
+
+    function bindCompareCheckboxes(){
+      document.querySelectorAll('.cmp').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const id = e.target.dataset.id;
+          if (e.target.checked) state.selected.add(id); else state.selected.delete(id);
+          renderTray();
+        });
+      });
+    }
+
+    function renderTray() {
+      const ids = Array.from(state.selected);
+      if (!ids.length) { els.tray.style.display = 'none'; els.pills.innerHTML = ''; return; }
+      els.tray.style.display = 'block';
+      els.pills.innerHTML = ids.map(id => {
+        const p = PRODUCTS.find(x => x.id === id); return `<span class="pill">${p.title}</span>`;
+      }).join('');
+    }
+
+    // interactions
+    els.search.addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
+    els.sort.addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+
+    els.viewButtons.forEach(btn => btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      state.view = btn.dataset.view;
+      els.viewButtons.forEach(b => b.classList.toggle('active', b === btn));
+      els.viewButtons.forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
+      render();
+    }));
+
+    // init
+    (function init(){
+      render();
+    })();
+  </script>
+</body>
+</html>
